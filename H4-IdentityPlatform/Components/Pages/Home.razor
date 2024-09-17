@@ -2,7 +2,6 @@
 
 @using H4_IdentityPlatform;
 @using Microsoft.AspNetCore.Identity;
-@inject RoleManager<IdentityRole> RoleManager;
 @inject UserManager<Data.ApplicationUser> UserManager;
 @inject IHttpContextAccessor _httpContextAccessor;
 
@@ -11,48 +10,9 @@
 <AuthorizeView>
     <Authorized>
         <p>You are logged in as @context.User.Identity.Name</p>
-        <h3>Roles: </h3>
-        <ul>
-            @foreach (string role in GetCurrentUserRoles()) {
-                <li>role</li>
-            }
-        </ul>
     </Authorized>
 
     <NotAuthorized>
         <p>You are not logged in!</p>
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-
-    private string[] AdminEmails = new string[] { "big@chungus.com" };
-    Data.ApplicationUser? User;
-    List<string> UserRoles = new();
-    protected override async Task OnInitializedAsync() {
-        this.User = await GetCurrentUser();
-        if (this.User is null) { return; }
-
-        await CreateUserRolesAsync(this.User, "Authenticated");
-        bool shouldBeAdmin = AdminEmails.Contains(this.User.Email, StringComparer.InvariantCultureIgnoreCase);
-        if (shouldBeAdmin) {
-            await CreateUserRolesAsync(this.User, "Admin");
-        }
-
-    }
-    public async Task<Data.ApplicationUser> GetCurrentUser() => await UserManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
-    public IList<string> GetCurrentUserRoles() => Utils.RunSync(() => UserManager.GetRolesAsync(this.User));
-    private async Task CreateUserRolesAsync(Data.ApplicationUser user, string role) {
-        if (user is null) { return; }
-
-        bool roleExists = await RoleManager.RoleExistsAsync(role);
-        if (!roleExists) {
-            await RoleManager.CreateAsync(new IdentityRole(role));
-        }
-
-        bool userIsInRole = await UserManager.IsInRoleAsync(user, role);
-        if (!userIsInRole) {
-            await UserManager.AddToRoleAsync(user, role);
-        }
-    }
-}
