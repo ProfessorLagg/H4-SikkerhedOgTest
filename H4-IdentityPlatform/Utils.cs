@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using Microsoft.AspNetCore.Identity;
+
 namespace H4_IdentityPlatform {
     public static class Utils {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -294,6 +296,11 @@ namespace H4_IdentityPlatform {
             task.Start();
             task.Wait();
             return task.Result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<TUser?> FindByUserName<TUser>(this UserManager<TUser> userManager, string userName) where TUser : class {
+            return await userManager.FindByNameAsync(userName);
         }
     }
 }

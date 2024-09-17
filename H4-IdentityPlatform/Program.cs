@@ -46,6 +46,12 @@ namespace H4_IdentityPlatform {
                     .AddDefaultTokenProviders()
                     .AddSignInManager();
 
+            builder.Services.AddAuthorization(options => {
+                options.AddPolicy("AdminPolicy", policy => {
+                    policy.RequireRole("AdminRole");
+                });
+            });
+
             builder.Services.AddSingleton<IEmailSender<AuthUser>, IdentityNoOpEmailSender>();
 
             var app = builder.Build();

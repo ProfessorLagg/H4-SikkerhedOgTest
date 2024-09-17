@@ -10,13 +10,8 @@
 <PageTitle>Home</PageTitle>
 
 <style>
-    .role-msg {
-        font-family: monospace;
-        font-weight: bold;
-    }
-
     .accept, .deny {
-        background-color: rgba(64,64,64,0.05);
+        font-family: monospace;
         font-weight: bold;
     }
 
@@ -30,7 +25,7 @@
 
 
 
-    .info-table,.info-tr,.info-td{
+    .info-table, .info-tr, .info-td {
         border: 1px solid black;
     }
 
@@ -38,7 +33,7 @@
         border-collapse: collapse;
     }
 
-    .info-td{
+    .info-td {
         padding-left: 1em;
         padding-right: 1em;
     }
@@ -46,16 +41,17 @@
 
 <AuthorizeView>
     <Authorized>
-        <span class="accept">You are logged in as @context.User.Identity.Name</span>
+        <h3>User Info</h3>
         <table class="info-table">
-            <tr class="info-tr">
-                <td class="info-td">Id</td>
-                <td class="info-td">@id_str</td>
-            </tr>
             <tr class="info-tr">
                 <td class="info-td">UserName</td>
                 <td class="info-td">@name_str</td>
             </tr>
+            <tr class="info-tr">
+                <td class="info-td">Id</td>
+                <td class="info-td">@id_str</td>
+            </tr>
+
             <tr class="info-tr">
                 <td class="info-td">Email</td>
                 <td class="info-td">@mail_str</td>
@@ -64,6 +60,20 @@
                 <td class="info-td">Roles</td>
                 <td class="info-td">@roles_str</td>
             </tr>
+            <tr class="info-tr">
+                <td class="info-td">Admin</td>
+                <td class="info-td">
+                    <AuthorizeView Roles="AdminRole, AdminPolicy" Context="innerContext">
+                        <Authorized>
+                            <span class="accept">true</span>
+                        </Authorized>
+
+                        <NotAuthorized>
+                            <span class="deny">false</span>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </td>
+            </tr>
         </table>
     </Authorized>
 
@@ -71,6 +81,9 @@
         <span class="deny">You are not logged in!</span>
     </NotAuthorized>
 </AuthorizeView>
+
+
+
 
 @code {
     [CascadingParameter]
@@ -86,18 +99,18 @@
         curUser = await UserManager.GetUserAsync(HttpContext.User);
 
         await EnsureRoles();
+        await AssignRoleByUserName("admin@chungus.com", "AdminRole");
+
         if (this.curUser is not null) {
-            Task<IdentityResult> assignTask = UserManager.AddToRoleAsync(curUser, "Admin");
             id_str = curUser.Id;
             name_str = curUser.UserName ?? "null";
             mail_str = curUser.Email ?? "null";
-            IdentityResult assignResult = await assignTask;
             roles_str = string.Join(", ", await UserManager.GetRolesAsync(curUser));
         }
 
     }
 
-    private static readonly string[] requiredRoles = new string[] { "Admin" };
+    private static readonly string[] requiredRoles = new string[] { "AdminRole" };
     private async Task EnsureRole(string roleName) {
         bool roleExists = await RoleManager.RoleExistsAsync(roleName);
         if (!roleExists) {
@@ -112,6 +125,12 @@
         }
         foreach (Task ensureTask in ensureTasks) {
             await ensureTask;
+        }
+    }
+    public async Task AssignRoleByUserName(string userName, string roleName) {
+        Data.AuthUser? user = await UserManager.FindByUserName(userName);
+        if (user is not null) {
+            IdentityResult addRoleResult = await UserManager.AddToRoleAsync(user, roleName);
         }
     }
 }

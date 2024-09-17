@@ -15,11 +15,10 @@
 
 <PageTitle>Confirm email</PageTitle>
 
+
 <h1>Confirm email</h1>
 <StatusMessage Message="@statusMessage" />
-<div>
-    <p>Scan the QR code with an Authenticator app, such as Google Authenticator</p>
-</div>
+<a class="button-link" href="/Account/Manage/EnableAuthenticator">Enable Two-Factor Authentication</a>
 
 @code {
     private const string ApplicationQRName = "Big Chungus Society";
