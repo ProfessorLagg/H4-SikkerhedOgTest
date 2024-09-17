@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @using H4_IdentityPlatform.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<AuthUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)

@@ -21,11 +21,11 @@ namespace H4_IdentityPlatform.Components.Account {
                 AuthenticationState authenticationState, CancellationToken cancellationToken) {
             // Get the user manager from a new scope to ensure it fetches fresh data
             await using var scope = scopeFactory.CreateAsyncScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AuthUser>>();
             return await ValidateSecurityStampAsync(userManager, authenticationState.User);
         }
 
-        private async Task<bool> ValidateSecurityStampAsync(UserManager<ApplicationUser> userManager, ClaimsPrincipal principal) {
+        private async Task<bool> ValidateSecurityStampAsync(UserManager<AuthUser> userManager, ClaimsPrincipal principal) {
             var user = await userManager.GetUserAsync(principal);
             if (user is null) {
                 return false;

@@ -8,6 +8,8 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Sqlite;
 
+using SQLitePCL;
+
 namespace H4_IdentityPlatform {
     public class Program {
         public static void Main(string[] args) {
@@ -21,31 +23,30 @@ namespace H4_IdentityPlatform {
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-            builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAuthentication(options => {
                 options.DefaultScheme = IdentityConstants.ApplicationScheme;
                 options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
             }).AddIdentityCookies();
 
-            //builder.Services.AddAuthentication();
-
-            var connectionString = builder
+            var connectionStringAuthBase = builder
                 .Configuration
-                //.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-                .GetConnectionString("SQLiteConnection");
+                .GetConnectionString("SQLiteAuthDB");
+            var connectionStringAuth = new SqliteConnectionStringBuilder(connectionStringAuthBase).ToString();
 
+            SQLitePCL.raw.SetProvider(new SQLite3Provider_e_sqlite3());
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseSqlite(connectionString));
+            builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connectionStringAuth));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                    .AddEntityFrameworkStores<ApplicationDbContext>()
+            builder.Services.AddIdentityCore<AuthUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                    .AddRoles<IdentityRole>()
+                    .AddRoleManager<RoleManager<IdentityRole>>()
+                    .AddEntityFrameworkStores<AuthDbContext>()
                     .AddDefaultTokenProviders()
                     .AddSignInManager();
 
-            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+            builder.Services.AddSingleton<IEmailSender<AuthUser>, IdentityNoOpEmailSender>();
 
             var app = builder.Build();
 

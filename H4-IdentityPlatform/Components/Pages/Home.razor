@@ -1,18 +1,117 @@
 ﻿@page "/"
 
 @using H4_IdentityPlatform;
+@using H4_IdentityPlatform.Data;
+@using H4_IdentityPlatform.Components.Account;
 @using Microsoft.AspNetCore.Identity;
-@inject UserManager<Data.ApplicationUser> UserManager;
-@inject IHttpContextAccessor _httpContextAccessor;
+@inject RoleManager<IdentityRole> RoleManager;
+@inject UserManager<AuthUser> UserManager;
 
 <PageTitle>Home</PageTitle>
 
+<style>
+    .role-msg {
+        font-family: monospace;
+        font-weight: bold;
+    }
+
+    .accept, .deny {
+        background-color: rgba(64,64,64,0.05);
+        font-weight: bold;
+    }
+
+    .accept {
+        color: forestgreen;
+    }
+
+    .deny {
+        color: red;
+    }
+
+
+
+    .info-table,.info-tr,.info-td{
+        border: 1px solid black;
+    }
+
+    .info-table {
+        border-collapse: collapse;
+    }
+
+    .info-td{
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+</style>
+
 <AuthorizeView>
     <Authorized>
-        <p>You are logged in as @context.User.Identity.Name</p>
+        <span class="accept">You are logged in as @context.User.Identity.Name</span>
+        <table class="info-table">
+            <tr class="info-tr">
+                <td class="info-td">Id</td>
+                <td class="info-td">@id_str</td>
+            </tr>
+            <tr class="info-tr">
+                <td class="info-td">UserName</td>
+                <td class="info-td">@name_str</td>
+            </tr>
+            <tr class="info-tr">
+                <td class="info-td">Email</td>
+                <td class="info-td">@mail_str</td>
+            </tr>
+            <tr class="info-tr">
+                <td class="info-td">Roles</td>
+                <td class="info-td">@roles_str</td>
+            </tr>
+        </table>
     </Authorized>
 
     <NotAuthorized>
-        <p>You are not logged in!</p>
+        <span class="deny">You are not logged in!</span>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+    Data.AuthUser? curUser;
+
+    string id_str = "no user";
+    string name_str = "no user";
+    string mail_str = "no user";
+    string roles_str = "";
+    List<string> curUserRoles = new();
+    protected async override Task OnInitializedAsync() {
+        curUser = await UserManager.GetUserAsync(HttpContext.User);
+
+        await EnsureRoles();
+        if (this.curUser is not null) {
+            Task<IdentityResult> assignTask = UserManager.AddToRoleAsync(curUser, "Admin");
+            id_str = curUser.Id;
+            name_str = curUser.UserName ?? "null";
+            mail_str = curUser.Email ?? "null";
+            IdentityResult assignResult = await assignTask;
+            roles_str = string.Join(", ", await UserManager.GetRolesAsync(curUser));
+        }
+
+    }
+
+    private static readonly string[] requiredRoles = new string[] { "Admin" };
+    private async Task EnsureRole(string roleName) {
+        bool roleExists = await RoleManager.RoleExistsAsync(roleName);
+        if (!roleExists) {
+            _ = await RoleManager.CreateAsync(new IdentityRole(roleName));
+
+        }
+    }
+    private async Task EnsureRoles() {
+        List<Task> ensureTasks = new();
+        foreach (string roleName in requiredRoles) {
+            ensureTasks.Add(EnsureRole(roleName));
+        }
+        foreach (Task ensureTask in ensureTasks) {
+            await ensureTask;
+        }
+    }
+}

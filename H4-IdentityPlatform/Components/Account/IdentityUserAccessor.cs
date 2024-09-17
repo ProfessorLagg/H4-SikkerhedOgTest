@@ -3,8 +3,8 @@ using H4_IdentityPlatform.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace H4_IdentityPlatform.Components.Account {
-    internal sealed class IdentityUserAccessor(UserManager<ApplicationUser> userManager, IdentityRedirectManager redirectManager) {
-        public async Task<ApplicationUser> GetRequiredUserAsync(HttpContext context) {
+    internal sealed class IdentityUserAccessor(UserManager<AuthUser> userManager, IdentityRedirectManager redirectManager) {
+        public async Task<AuthUser> GetRequiredUserAsync(HttpContext context) {
             var user = await userManager.GetUserAsync(context.User);
 
             if (user is null) {

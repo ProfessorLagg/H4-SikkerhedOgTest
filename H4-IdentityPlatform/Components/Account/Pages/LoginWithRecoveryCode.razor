@@ -4,8 +4,8 @@
 @using Microsoft.AspNetCore.Identity
 @using H4_IdentityPlatform.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<AuthUser> SignInManager
+@inject UserManager<AuthUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<LoginWithRecoveryCode> Logger
 
@@ -35,7 +35,7 @@
 
 @code {
     private string? message;
-    private ApplicationUser user = default!;
+    private AuthUser user = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();

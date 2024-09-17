@@ -5,13 +5,15 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
+@using QRCoder
 @using H4_IdentityPlatform.Data
 
-@inject UserManager<ApplicationUser> UserManager
+@inject UserManager<AuthUser> UserManager
 @inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<EnableAuthenticator> Logger
+
 
 <PageTitle>Configure authenticator app</PageTitle>
 
@@ -26,18 +28,15 @@ else {
         <ol class="list">
             <li>
                 <p>
-                    Download a two-factor authenticator app like Microsoft Authenticator for
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</a> and
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</a> or
-                    Google Authenticator for
+                    Download a two-factor authenticator app like Google Authenticator for
                     <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en">Android</a> and
                     <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8">iOS</a>.
                 </p>
             </li>
             <li>
                 <p>Scan the QR Code or enter this key <kbd>@sharedKey</kbd> into your two factor authenticator app. Spaces and casing do not matter.</p>
-                
-                <div></div>
+
+                <div><img src="@qrImgSrc" alt="qr.png" style="aspect-ratio: 1/1; max-width: 256px; width: 100%;" /></div>
                 <div data-url="@authenticatorUri"></div>
             </li>
             <li>
@@ -68,10 +67,12 @@ else {
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
     private string? message;
-    private ApplicationUser user = default!;
+    private AuthUser user = default!;
     private string? sharedKey;
     private string? authenticatorUri;
     private IEnumerable<string>? recoveryCodes;
+
+    private string? qrImgSrc;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -111,7 +112,7 @@ else {
         }
     }
 
-    private async ValueTask LoadSharedKeyAndQrCodeUriAsync(ApplicationUser user) {
+    private async ValueTask LoadSharedKeyAndQrCodeUriAsync(AuthUser user) {
         // Load the authenticator key & QR code URI to display on the form
         var unformattedKey = await UserManager.GetAuthenticatorKeyAsync(user);
         if (string.IsNullOrEmpty(unformattedKey)) {
@@ -123,6 +124,16 @@ else {
 
         var email = await UserManager.GetEmailAsync(user);
         authenticatorUri = GenerateQrCodeUri(email!, unformattedKey!);
+
+        using (QRCodeGenerator qrGenerator = new QRCodeGenerator()) {
+            using (QRCodeData qrData = qrGenerator.CreateQrCode(authenticatorUri, QRCodeGenerator.ECCLevel.Default)) {
+                using (PngByteQRCode qrPng = new PngByteQRCode(qrData)) {
+                    byte[] qrCodeImage = qrPng.GetGraphic(20);
+                    string base64 = Convert.ToBase64String(qrCodeImage);
+                    qrImgSrc = $"data:image/png;base64, {base64}";
+                }
+            }
+        }
     }
 
     private string FormatKey(string unformattedKey) {
