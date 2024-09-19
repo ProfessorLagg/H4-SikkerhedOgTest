@@ -78,7 +78,7 @@
     </Authorized>
 
     <NotAuthorized>
-        <span class="deny">You are not logged in!</span>
+        <span id="login-state" class="deny">@notLoggedInText</span>
     </NotAuthorized>
 </AuthorizeView>
 
@@ -86,6 +86,8 @@
 
 
 @code {
+    public const string notLoggedInText = @"You are not logged in!";
+
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
     Data.AuthUser? curUser;
