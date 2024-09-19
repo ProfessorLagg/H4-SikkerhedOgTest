@@ -2,6 +2,7 @@ using H4_IdentityPlatform.Components;
 using H4_IdentityPlatform.Components.Account;
 using H4_IdentityPlatform.Data;
 
+using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
