@@ -8,40 +8,13 @@
 @inject UserManager<AuthUser> UserManager;
 
 <PageTitle>Home</PageTitle>
-
-<style>
-    .accept, .deny {
-        font-family: monospace;
-        font-weight: bold;
-    }
-
-    .accept {
-        color: forestgreen;
-    }
-
-    .deny {
-        color: red;
-    }
-
-
-
-    .info-table, .info-tr, .info-td {
-        border: 1px solid black;
-    }
-
-    .info-table {
-        border-collapse: collapse;
-    }
-
-    .info-td {
-        padding-left: 1em;
-        padding-right: 1em;
-    }
-</style>
+<link rel="stylesheet" href="~/Home.css" />
 
 <AuthorizeView>
     <Authorized>
+        <span id="login-state" class="accept">@loggedInText</span>
         <h3>User Info</h3>
+
         <table class="info-table">
             <tr class="info-tr">
                 <td class="info-td">UserName</td>
@@ -87,9 +60,10 @@
 
 @code {
     public const string notLoggedInText = @"You are not logged in!";
+    public const string loggedInText = @"You are logged in!";
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext _HttpContext { get; set; } = default!;
     Data.AuthUser? curUser;
 
     string id_str = "no user";
@@ -98,10 +72,15 @@
     string roles_str = "";
     List<string> curUserRoles = new();
     protected async override Task OnInitializedAsync() {
-        curUser = await UserManager.GetUserAsync(HttpContext.User);
-
         await EnsureRoles();
         await AssignRoleByUserName("admin@chungus.com", "AdminRole");
+
+        ArgumentNullException.ThrowIfNull(UserManager, nameof(UserManager));
+
+        if (_HttpContext is null) { return; }
+        if (_HttpContext.User is null) { return; }
+
+        curUser = await UserManager.GetUserAsync(_HttpContext.User);
 
         if (this.curUser is not null) {
             id_str = curUser.Id;

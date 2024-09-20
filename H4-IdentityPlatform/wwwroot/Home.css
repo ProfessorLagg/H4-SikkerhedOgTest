@@ -1,0 +1,28 @@
+﻿
+.accept, .deny {
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.accept {
+    color: forestgreen;
+}
+
+.deny {
+    color: red;
+}
+
+
+
+.info-table, .info-tr, .info-td {
+    border: 1px solid black;
+}
+
+.info-table {
+    border-collapse: collapse;
+}
+
+.info-td {
+    padding-left: 1em;
+    padding-right: 1em;
+}

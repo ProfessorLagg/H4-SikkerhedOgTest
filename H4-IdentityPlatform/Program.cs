@@ -55,6 +55,8 @@ namespace H4_IdentityPlatform {
 
             builder.Services.AddSingleton<IEmailSender<AuthUser>, IdentityNoOpEmailSender>();
 
+            string uri = builder.Configuration["hostname"] + ':' + builder.Configuration["port"];
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
